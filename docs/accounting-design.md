@@ -86,7 +86,7 @@ Journal（凭证）
 
 ```
 available_balance(account) =
-    Σ(credit.amount_minor) - Σ(debit.amount_minor)   -- 视科目方向而定
+    opening_balance + Σ(credit.amount_minor) - Σ(debit.amount_minor)
 ```
 
 不变量 I-2 的校验 SQL 见 `consistency.md`。余额表是 **读优化冗余**，分录才是事实来源；两者必须同事务写入。

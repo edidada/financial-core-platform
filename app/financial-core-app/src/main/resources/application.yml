@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: financial-core-platform
+  profiles:
+    active: ${FCP_DB_PROFILE:mysql}
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      # MySQL 默认 REPEATABLE READ、PG 默认 READ COMMITTED：显式统一 (ADR-0006)
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${FCP_SERVER_PORT:8080}
+
+logging:
+  level:
+    com.fcp: INFO

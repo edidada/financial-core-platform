@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.fcp</groupId>
+    <artifactId>financial-core-platform</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>financial-core-platform</name>
+    <description>Industrial-grade financial transaction and double-entry ledger platform</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <modules>
+        <module>common/common-domain</module>
+        <module>common/common-exception</module>
+        <module>common/common-utils</module>
+        <module>common/common-api</module>
+        <module>infrastructure/idempotency</module>
+        <module>infrastructure/outbox</module>
+        <module>engines/accounting-engine</module>
+        <module>engines/posting-engine</module>
+        <module>services/account-service</module>
+        <module>services/ledger-service</module>
+        <module>services/transaction-service</module>
+        <module>app/financial-core-app</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency><groupId>com.fcp</groupId><artifactId>common-domain</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>common-exception</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>common-utils</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>common-api</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-idempotency</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-outbox</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-accounting</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-posting</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-account</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-ledger</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-transaction</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>financial-core-app</artifactId><version>${project.version}</version></dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

@@ -15,7 +15,7 @@ graph LR
     Client[渠道: Web / App / OpenAPI]
     Ops[运维与审计]
     FCP[Financial Core Platform<br/>阶段一 模块化单体]
-    DB[(PostgreSQL<br/>权威账务库)]
+    DB[(关系数据库<br/>MySQL 8 默认 / PostgreSQL 可选)]
     Bank[外部银行/支付渠道<br/>阶段一不接入]
     Client -->|HTTPS 交易/查询| FCP
     Ops -->|监控/审计| FCP
@@ -39,7 +39,7 @@ graph TB
     end
     GW --> TX --> AC
     TX --> LG --> PE
-    AC --> DB[(PostgreSQL)]
+    AC --> DB[(MySQL 8 / PostgreSQL)]
     PE --> DB
     IDP --> DB
 ```
@@ -83,7 +83,7 @@ infrastructure (JPA/MyBatis / Outbox / 审计 / 时钟 / ID 生成)
 | --- | --- | --- |
 | 语言 | Java 21 | LTS，虚拟线程可用于提升并发（不用于账务正确性） |
 | 框架 | Spring Boot 3.x | 事务管理、参数校验 |
-| 持久层 | PostgreSQL + Flyway | 权威账务库；约束、行锁、隔离级别 |
+| 持久层 | MySQL 8（默认）/ PostgreSQL + Flyway | 权威账务库；JdbcTemplate 可移植 SQL，方言差异仅落在 DDL |
 | 缓存 | Redis（可选） | 仅查询缓存，禁止参与余额/分录判定 |
 | 消息队列 | **无**（Outbox 表预留） | 阶段二才引入 Kafka |
 | 测试 | JUnit 5 + Testcontainers + jqwik | 集成与属性测试 |
@@ -95,15 +95,15 @@ infrastructure (JPA/MyBatis / Outbox / 审计 / 时钟 / ID 生成)
 ## 七、部署拓扑（阶段一）
 
 ```
-[客户端] → [单应用实例 ×N（无状态，可选）] → [PostgreSQL 主 + 同步/异步备]
+[客户端] → [单应用实例 ×N（无状态，可选）] → [MySQL 8 主 + 从（本机默认）]
                                           └→ [Redis 只读缓存（可降级）]
 ```
 
-应用无状态可水平扩展；所有状态在 PostgreSQL。主备切换 RTO < 30 min、RPO ≤ 5 min（异步复制），阶段四再升级到多 AZ 自动切换。
+应用无状态可水平扩展；所有状态在关系数据库（默认本机 MySQL 8，可切 PostgreSQL）。主备切换 RTO < 30 min、RPO ≤ 5 min（异步复制），阶段四再升级到多 AZ 自动切换。
 
 ## 八、关键设计原则
 
-- **权威数据源唯一**（README 第三节）：余额与分录只在 PostgreSQL。
+- **权威数据源唯一**（README 第三节）：余额与分录只在关系数据库（MySQL 8 / PostgreSQL）。
 - **交易/账务/清算/结算分离**：阶段一仅交易 + 账务，清算结算留到阶段二。
 - **金额用 BIGINT 最小单位**（ADR-0002）。
 - **原子提交边界**（ADR-0003）：所有资金相关写入同一本地事务。
@@ -118,8 +118,23 @@ infrastructure (JPA/MyBatis / Outbox / 审计 / 时钟 / ID 生成)
 | [ADR-0003](adr/0003-single-db-transaction-boundary.md) | 单库事务作为资金写入原子边界 |
 | [ADR-0004](adr/0004-reversal-by-reverse-entry.md) | 冲正通过反向分录实现 |
 | [ADR-0005](adr/0005-idempotency-key.md) | 幂等键 + 唯一约束 + 结果快照 |
+| [ADR-0006](adr/0006-multi-database-support.md) | MySQL 8 默认 + PostgreSQL 保留的多数据库支持 |
 
 ## 十、阶段二演进钩子
 
 - `outbox_event` 表与 `idempotency_record` 在阶段一即建好并写入，阶段二接入 Kafka 投递即可，无需改账务逻辑。
 - 模块边界按未来服务拆分线划分（transaction / account / ledger / reconciliation），拆分时尽量只替换进程间调用为 RPC。
+
+## 十一、多数据库支持（MySQL 8 默认，PostgreSQL 保留）
+
+本机开发默认 **MySQL 8**，同时保留 **PostgreSQL**；两者共用同一套业务代码与事务语义（见 [ADR-0006](adr/0006-multi-database-support.md)）。
+
+| 关注点 | 方案 |
+| --- | --- |
+| 切换方式 | Spring profile：`mysql`（默认）、`postgresql`；连接凭据一律走环境变量 |
+| 迁移脚本 | `db/migration/mysql/` 与 `db/migration/postgresql/`，由 profile 指定 Flyway `locations` |
+| 业务 SQL | JdbcTemplate + 可移植 SQL；条件更新、`SELECT ... FOR UPDATE` 两库均支持 |
+| 方言差异 | 仅落在 DDL（时间类型、JSON、布尔、默认值），见 `database-design.md` 第十节 |
+| 事务隔离 | 显式统一为 `READ_COMMITTED`（MySQL 默认 REPEATABLE READ，PG 默认 READ COMMITTED） |
+| 主键生成 | 应用层雪花 ID，避免 `AUTO_INCREMENT` / `BIGSERIAL` 差异 |
+| CI 验证 | Testcontainers 同时跑 MySQL 8 与 PostgreSQL 两套集成测试 |

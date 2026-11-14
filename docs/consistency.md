@@ -8,11 +8,12 @@
 
 | 维度 | 阶段一方案 |
 | --- | --- |
-| 资金正确性 | PostgreSQL 本地事务 + 约束 + 行锁 |
+| 资金正确性 | 关系数据库本地事务（MySQL 8 默认 / PostgreSQL）+ 约束 + 行锁 |
 | 幂等 | 唯一索引 + 幂等记录 + 结果快照 |
 | 事件可靠性 | Outbox 表同事务写入（阶段二投递） |
 | 故障恢复 | 以账务分录为权威事实补状态 |
 | 缓存 | 非权威，可降级，不参与判定 |
+| 隔离级别 | 显式 `READ_COMMITTED`（MySQL 默认 REPEATABLE READ，需覆盖以统一两库并发语义） |
 
 明确不做/不承诺：
 - 不依赖 Redis 保证资金正确性。
@@ -24,7 +25,7 @@
 | 编号 | 不变量 | 强制手段 |
 | --- | --- | --- |
 | I-1 | 凭证借贷平衡 | 应用校验 + DB 层校验 |
-| I-2 | 余额 = 分录累计 | 离线重算 |
+| I-2 | 余额 = 期初余额 + 分录累计 | 离线重算 |
 | I-3 | 同一业务交易最多入账一次 | `journal.biz_id` 唯一 |
 | I-4 | 余额不为负 | CHECK + 条件更新 |
 | I-5 | 已生效分录不可改删 | 只追加 + 权限 |
@@ -40,14 +41,14 @@ GROUP BY journal_id
 HAVING SUM(CASE WHEN direction='DEBIT' THEN amount_minor ELSE 0 END)
     <> SUM(CASE WHEN direction='CREDIT' THEN amount_minor ELSE 0 END);
 
--- I-2 余额与分录累计不一致的账户
-SELECT b.account_id, b.available_balance,
+-- I-2 余额与「期初余额 + 分录累计」不一致的账户
+SELECT b.account_id, b.available_balance, b.opening_balance,
        COALESCE(SUM(CASE WHEN e.direction='CREDIT' THEN e.amount_minor
-                         ELSE -e.amount_minor END), 0) AS recomputed
+                         ELSE -e.amount_minor END), 0) AS delta
 FROM account_balance b
 LEFT JOIN ledger_entry e ON e.account_id = b.account_id
-GROUP BY b.account_id, b.available_balance
-HAVING b.available_balance <> COALESCE(SUM(CASE WHEN e.direction='CREDIT'
+GROUP BY b.account_id, b.available_balance, b.opening_balance
+HAVING b.available_balance - b.opening_balance <> COALESCE(SUM(CASE WHEN e.direction='CREDIT'
                     THEN e.amount_minor ELSE -e.amount_minor END), 0);
 
 -- I-3 重复入账嫌疑（同一业务多张凭证）
@@ -123,6 +124,7 @@ transfer():
 - 并发扣款测试：1000 并发请求打同一账户（余额 100 元，每笔 80 元）→ 只允许 1 笔成功。
 - 幂等重试测试：100 万次重复请求 → 同一业务仅生效一次。
 - 属性测试（jqwik）：随机生成交易序列，断言 I-1~I-6 恒成立。
+- 双库验证：同一套不变量测试分别在 MySQL 8 与 PostgreSQL 上执行（Testcontainers），结果必须一致。
 - 详见 `test-strategy.md`。
 
 ## 八、阶段二演进

@@ -13,7 +13,7 @@
 | [architecture.md](architecture.md) | 总体架构 | C4、模块边界、依赖规则、分层、技术栈、部署 |
 | [accounting-design.md](accounting-design.md) | 复式记账 | 科目体系、借贷规则、分录模型、入账、冲正、引擎接口 |
 | [transaction-design.md](transaction-design.md) | 交易状态机 | 状态迁移、幂等、UNKNOWN/RECOVERING、超时恢复 |
-| [database-design.md](database-design.md) | 数据模型 | ER、DDL、索引、约束、事务边界、隔离级别、Flyway |
+| [database-design.md](database-design.md) | 数据模型 | ER、DDL、索引、约束、事务边界、隔离级别、Flyway、多数据库（MySQL 8 / PostgreSQL） |
 | [consistency.md](consistency.md) | 一致性 | 不变量清单、并发扣款、原子提交、故障恢复、校验 SQL |
 | [test-strategy.md](test-strategy.md) | 测试策略 | 并发/幂等/属性测试、不变量检查、验收矩阵 |
 | [adr/](adr/) | 架构决策 | 关键取舍的 ADR 记录 |
@@ -46,9 +46,49 @@
 - **账务不可变**：已生效分录不删除、不直接修改，冲正通过反向分录实现。
 - **原子提交**：余额变更、会计分录、幂等记录、Outbox 事件处于同一本地事务边界。
 - **正确先于性能**：先单库事务建立正确性基线，再引入分片与多活，每次升级都要能衡量收益与代价。
+- **多数据库支持**：默认本机 MySQL 8，同时保留 PostgreSQL；方言差异收敛在 DDL 与配置，业务 SQL 保持可移植（见 [ADR-0006](adr/0006-multi-database-support.md)）。
 
 ## 五、文档规范
 
 - 每个关键模块交付 HLD、LLD、ADR、Test Plan、Benchmark Report 五类产物。
 - 所有性能结论必须记录硬件、数据量、并发模型、P50/P95/P99/P99.9、GC 与数据库等待事件。
 - ADR 采用「背景 / 决策 / 备选方案 / 后果」四段式，编号递增、只追加不修改。
+
+## 六、构建与运行（阶段一）
+
+需求：JDK 21、Maven 3.9+、本机 MySQL 8（默认）或 PostgreSQL。
+
+先创建空库 `fcp`（Flyway 只建表、不建库）：MySQL 用 `CREATE DATABASE fcp CHARACTER SET utf8mb4;`，PostgreSQL 用 `CREATE DATABASE fcp;`。
+
+```bash
+# 全量编译（JDK 21）
+mvn -q clean package
+
+# 默认：本机 MySQL 8
+FCP_DB_USER=... FCP_DB_PASSWORD=... \
+  java -jar app/financial-core-app/target/financial-core-app-*.jar
+
+# 切换到 PostgreSQL
+FCP_DB_USER=... FCP_DB_PASSWORD=... \
+  java -jar app/financial-core-app/target/financial-core-app-*.jar --spring.profiles.active=postgresql
+```
+
+Maven 模块（依赖方向自上而下单向）：
+
+```
+financial-core-platform (pom)
+├── common/common-domain        # Money、枚举（纯 Java）
+├── common/common-exception     # 领域异常
+├── common/common-utils         # 雪花 ID、SHA-256
+├── common/common-api           # DTO / 统一响应
+├── infrastructure/idempotency  # 幂等记录仓储
+├── infrastructure/outbox       # 事务消息仓储
+├── engines/accounting-engine   # 分录、借贷平衡校验（纯 Java）
+├── engines/posting-engine      # PostingEngine 契约
+├── services/account-service    # 账户、条件更新
+├── services/ledger-service     # 入账引擎实现、不变量检查
+├── services/transaction-service# 状态机 + @Transactional 编排
+└── app/financial-core-app      # 启动类、REST、配置、双库 Flyway 迁移
+```
+
+连接凭据一律通过环境变量注入，仓库内不含任何账号口令。服务端口默认 8080，若被占用用 `FCP_SERVER_PORT=18080` 覆盖（不改动配置文件）。

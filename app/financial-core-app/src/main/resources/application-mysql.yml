@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: "${FCP_DB_URL:jdbc:mysql://localhost:3306/fcp?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC}"
+    username: ${FCP_DB_USER:root}
+    password: ${FCP_DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    locations: classpath:db/migration/mysql

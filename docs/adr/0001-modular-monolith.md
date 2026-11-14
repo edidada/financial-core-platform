@@ -12,7 +12,7 @@
 
 ## 决策
 
-阶段一交付 **一个可部署单元（Modular Monolith）+ 一个 PostgreSQL 库 + 一个本地事务边界**；内部按未来服务边界强隔离模块（transaction / account / ledger / idempotency / outbox），依赖方向单向向下，用 ArchUnit 在 CI 强制校验。
+阶段一交付 **一个可部署单元（Modular Monolith）+ 一个关系数据库（默认本机 MySQL 8，可切换 PostgreSQL）+ 一个本地事务边界**；内部按未来服务边界强隔离模块（transaction / account / ledger / idempotency / outbox），依赖方向单向向下，用 ArchUnit 在 CI 强制校验。
 
 `posting-engine` 作为 ledger 模块内的 Java 库，不独立部署。
 

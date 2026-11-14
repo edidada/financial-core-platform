@@ -11,7 +11,7 @@
 | 层次 | 工具 | 覆盖 | 占比目标 |
 | --- | --- | --- | --- |
 | 单元测试 | JUnit 5 | 状态机迁移、借贷平衡、金额运算、幂等判定 | 高 |
-| 集成测试 | Testcontainers + PostgreSQL | 事务边界、DDL 约束、Flyway 迁移 | 中 |
+| 集成测试 | Testcontainers + MySQL 8 / PostgreSQL（双库） | 事务边界、DDL 约束、Flyway 迁移 | 中 |
 | 并发测试 | JUnit + 线程池 / Gatling | 并发扣款、热点账户、死锁 | 中 |
 | 幂等/重试测试 | 自研压测驱动 | 百万次重复请求 | 中 |
 | 属性测试 | jqwik | 随机交易序列下的不变量 | 低 |
@@ -29,6 +29,7 @@
 | TC-6 | 冲正 | 冲正后净额 0，原凭证与反向凭证均可追溯 | `accounting-design.md` |
 | TC-7 | 状态机非法迁移 | FAILED→SUCCEEDED 等一律拒绝 | `transaction-design.md` |
 | TC-8 | 不变量离线校验 | 全量数据跑 I-1~I-6 校验 SQL，0 行异常 | `consistency.md` |
+| TC-9 | 双库一致性 | 同一套 TC-1~TC-8 在 MySQL 8 与 PostgreSQL 上结果完全一致 | ADR-0006 |
 
 ## 四、并发扣款测试设计（TC-1 细化）
 
@@ -75,6 +76,7 @@
 - ArchUnit 校验模块依赖方向，防止账务表被越权访问。
 - TC-1 / TC-4 / TC-8 作为 PR 必跑用例。
 - 不变量检查工具输出非 0 行异常 → 直接失败。
+- 集成测试矩阵同时跑 `mysql` 与 `postgresql` 两个 profile，任何一库失败即阻断合并。
 
 ## 八、测试报告产物
 

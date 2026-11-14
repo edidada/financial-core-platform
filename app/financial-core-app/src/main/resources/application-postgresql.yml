@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: "${FCP_DB_URL:jdbc:postgresql://localhost:5432/fcp}"
+    username: ${FCP_DB_USER:postgres}
+    password: ${FCP_DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    locations: classpath:db/migration/postgresql
