@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Service
+metadata: { name: fcp-app, namespace: fcp }
+spec:
+  type: ClusterIP
+  selector: { app: fcp-app }
+  ports: [{ port: 80, targetPort: 8080 }]

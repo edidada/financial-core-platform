@@ -1,0 +1,41 @@
+replicaCount: 3
+
+image:
+  repository: fcp/app
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+
+service:
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests: { cpu: 500m, memory: 1Gi }
+  limits:   { cpu: "2",  memory: 2Gi }
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  minAvailable: 2
+
+database:
+  profile: mysql            # mysql（默认）| postgresql
+  # user / password / url 由 --set 或 existingSecret 注入，禁止写入 values.yaml
+  existingSecret: fcp-secrets
+
+kafka:
+  bootstrap: ""             # 留空则 Outbox 用内存投递器
+  topic: fcp.domain-events
+
+gateway:
+  existingSecret: fcp-secrets
+
+sharding:
+  count: 1
+
+rateLimit:
+  capacity: 5000

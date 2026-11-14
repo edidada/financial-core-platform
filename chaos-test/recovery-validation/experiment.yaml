@@ -1,0 +1,8 @@
+# 综合恢复演练：在途交易重放与核对
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: fcp-chaos-recovery, namespace: fcp }
+data:
+  action: "full-recovery-drill"
+  replayOutbox: "true"
+  reconcileJournals: "true"

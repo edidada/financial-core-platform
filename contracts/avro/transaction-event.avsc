@@ -1,0 +1,15 @@
+{
+  "type": "record",
+  "name": "TransactionEvent",
+  "namespace": "com.fcp.contracts.avro",
+  "doc": "Kafka 领域事件（阶段二 Outbox 投递）",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "transactionId", "type": "string" },
+    { "name": "eventType", "type": { "type": "enum", "name": "EventType", "symbols": ["TRANSACTION_SUCCEEDED", "TRANSACTION_REVERSED", "PAYMENT_ACCEPTED", "SETTLEMENT_CONFIRMED"] } },
+    { "name": "amountMinor", "type": "long" },
+    { "name": "currency", "type": "string" },
+    { "name": "traceId", "type": ["null", "string"], "default": null },
+    { "name": "occurredAtMillis", "type": "long" }
+  ]
+}

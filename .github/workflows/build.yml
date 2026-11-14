@@ -1,0 +1,23 @@
+name: build
+
+on:
+  push: { branches: [main] }
+  pull_request: { branches: [main] }
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Build all modules
+        run: mvn -B -ntp -DskipTests clean package
+      - name: Upload boot jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: financial-core-app
+          path: app/financial-core-app/target/financial-core-app-*.jar

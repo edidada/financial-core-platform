@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: fcp-config, namespace: fcp }
+data:
+  FCP_DB_PROFILE: "mysql"
+  FCP_SERVER_PORT: "8080"
+  FCP_SHARDING_COUNT: "1"
+  FCP_RATELIMIT_CAPACITY: "5000"

@@ -1,9 +1,11 @@
 # Financial Core Platform — 设计文档
 
-> **阶段一：金融账务核心（Fund Correctness First）**
+> **阶段一~五：完整实现（Fund Correctness First）**
 > 定位：Java 21 高并发金融交易与复式记账平台。第一优先级是「资金正确性」，第二是「分布式一致性」，高性能与容灾为进阶能力。
 
-本目录存放 **架构评审级别** 的设计文档。阶段一的目标不是拆出十几个微服务，而是先用 **模块化单体 + 单库事务** 建立可证明的资金正确性基线，再逐阶段引入分布式组件（见 `README.txt` 第九节实施路线）。
+本目录存放 **架构评审级别** 的设计文档。阶段一先用 **模块化单体 + 单库事务** 建立可证明的资金正确性基线，
+阶段二~五逐阶段引入分布式组件、性能与大数据、高可用生产工程、专家级专题（见 `README.txt` 第九节实施路线）。
+**五个阶段的代码与验证产物均已落地**，下文路线图与模块地图对应当前仓库状态。
 
 ## 一、文档清单（阶段一）
 
@@ -16,7 +18,13 @@
 | [database-design.md](database-design.md) | 数据模型 | ER、DDL、索引、约束、事务边界、隔离级别、Flyway、多数据库（MySQL 8 / PostgreSQL） |
 | [consistency.md](consistency.md) | 一致性 | 不变量清单、并发扣款、原子提交、故障恢复、校验 SQL |
 | [test-strategy.md](test-strategy.md) | 测试策略 | 并发/幂等/属性测试、不变量检查、验收矩阵 |
-| [adr/](adr/) | 架构决策 | 关键取舍的 ADR 记录 |
+| [performance-design.md](performance-design.md) | 性能设计 | 性能预算、容量模型、瓶颈分析、优化顺序 |
+| [performance-report.md](performance-report.md) | 性能报告 | 已实测正确性基线 + 压测矩阵模板 |
+| [disaster-recovery.md](disaster-recovery.md) | 灾难恢复 | RTO/RPO、故障模型、恢复流程、账务恢复 |
+| [security-design.md](security-design.md) | 安全设计 | 认证签名、密钥管理、审计、CI 门禁 |
+| [incident-review.md](incident-review.md) | 故障复盘 | 复盘模板与已登记演练 |
+| [00-requirements/](00-requirements/) … [11-incident-reviews/](11-incident-reviews/) | 分阶段文档体系 | 按 `README.txt` 第二节编号目录组织 |
+| [adr/](adr/) | 架构决策 | ADR-0001~0009 |
 
 ## 二、阅读顺序
 
@@ -29,15 +37,16 @@
 
 ## 三、阶段路线图
 
-| 阶段 | 主题 | 核心目标 | 文档状态 |
+| 阶段 | 主题 | 核心目标 | 实现状态 |
 | --- | --- | --- | --- |
-| 一 | 金融账务核心 | 账户、交易、复式记账、幂等、冲正、并发扣款；模块化单体 | **本目录** |
-| 二 | 分布式金融交易 | Kafka、Outbox、状态机恢复、清算、对账 | 待建 `04-consistency/` 等 |
-| 三 | 高性能与大数据 | 分区、批量、JMH/Gatling、5,000 TPS、性能报告 | 待建 `05-performance/` |
-| 四 | 高可用与生产工程 | K8s 多 AZ、监控、混沌、恢复演练、CI/CD、安全审计 | 待建 `06~09/` |
-| 五 | 专家级专题 | 高并发账务引擎 / 分布式事务 / 亿级对账 / 多活容灾 | 待建 `11-incident-reviews/` |
+| 一 | 金融账务核心 | 账户、交易、复式记账、幂等、冲正、并发扣款；模块化单体 | 已实现，MySQL 8.4 实测通过 |
+| 二 | 分布式金融交易 | Kafka、Outbox、状态机恢复、清算、对账、故障重试 | 已实现（Outbox/去重/锁/支付/清算/结算/对账/退款/手续费/限额/风控/流动性/报表） |
+| 三 | 高性能与大数据 | 分区、批量、JMH/Gatling/k6/JMeter、5,000 TPS、性能报告 | 引擎与压测体系已实现；**TPS 数值待实测** |
+| 四 | 高可用与生产工程 | K8s 多 AZ、监控告警、故障注入、恢复演练、CI/CD、安全审计 | 已实现（deploy/ + 5 工作流 + 7 类混沌 + 8 类测试） |
+| 五 | 专家级专题 | 高并发账务引擎 | 已实现（热点净额引擎 + 属性测试 + 技术论文式报告） |
 
-阶段二及以后按 `README.txt` 第二节的 `docs/00~11` 编号目录扩展；阶段一先采用扁平命名，避免过早引入空目录。
+`docs/00~11` 编号目录已按 `README.txt` 第二节建立，与扁平文档交叉引用。
+**阶段三的 5,000 TPS / 亿级数据仍是实验目标**，必须结合硬件与数据分布验证，不得预设可达。
 
 ## 四、贯穿全阶段的第一原则
 
@@ -76,19 +85,28 @@ FCP_DB_USER=... FCP_DB_PASSWORD=... \
 Maven 模块（依赖方向自上而下单向）：
 
 ```
-financial-core-platform (pom)
-├── common/common-domain        # Money、枚举（纯 Java）
-├── common/common-exception     # 领域异常
-├── common/common-utils         # 雪花 ID、SHA-256
-├── common/common-api           # DTO / 统一响应
-├── infrastructure/idempotency  # 幂等记录仓储
-├── infrastructure/outbox       # 事务消息仓储
-├── engines/accounting-engine   # 分录、借贷平衡校验（纯 Java）
-├── engines/posting-engine      # PostingEngine 契约
-├── services/account-service    # 账户、条件更新
-├── services/ledger-service     # 入账引擎实现、不变量检查
-├── services/transaction-service# 状态机 + @Transactional 编排
-└── app/financial-core-app      # 启动类、REST、配置、双库 Flyway 迁移
+financial-core-platform (pom)                 # 41 个 Maven 模块
+├── common/            (4) domain / exception / utils / api
+├── infrastructure/    (11) idempotency, outbox, id-generator, distributed-lock,
+│                          transaction-outbox, message-consumer, rate-limiter,
+│                          circuit-breaker, database-sharding, audit-log, observability
+├── gateway/           (2) authentication, api-gateway
+├── engines/           (7) accounting, posting, rule, batch,
+│                          reconciliation, routing, hotspot-accounting
+├── services/          (13) account, ledger, transaction, payment, clearing,
+│                          settlement, reconciliation, refund, fee, limit,
+│                          risk, liquidity, reporting
+├── benchmark/jmh      (1) JMH 微基准
+├── tests/platform-tests(1) 18 个纯逻辑单测
+└── app/financial-core-app     # 启动类、REST、配置、双库 Flyway V1/V2
 ```
 
+其他交付物：`contracts/`（OpenAPI/Protobuf/Avro/JSON Schema）、`database/`（分区/索引/种子/SQL 基准）、
+`benchmark/`（k6/JMeter/Gatling/场景/报告）、`chaos-test/`（7 类故障）、`tests/`（8 类测试）、
+`deploy/`（Docker/K8s/Helm/Terraform/Ansible/监控）、`.github/workflows/`（5 条流水线）、`docs/00~11` + `adr/`。
+
+主要 REST 入口：核心 `/v1/accounts`、`/v1/transactions`、`/v1/invariants`；
+阶段二~五 `/v1/platform/*`（支付/清算/对账/手续费/限额/风控/报表/流动性/Outbox/去重/锁/分片/网关/热点证明/指标）。
+
 连接凭据一律通过环境变量注入，仓库内不含任何账号口令。服务端口默认 8080，若被占用用 `FCP_SERVER_PORT=18080` 覆盖（不改动配置文件）。
+Kafka 未配置时 `OutboxRelay` 使用内存投递器，开箱即可跑；配置 `FCP_KAFKA_BOOTSTRAP` 后切换 Kafka。

@@ -1,0 +1,5 @@
+-- 单账户开户 SQL 参考（ Flyway 迁移后由压测脚本循环调用 REST 接口更真实）
+-- INSERT INTO account (account_id, tenant_id, account_no, currency, ledger_set, status, created_at)
+-- VALUES (?, 1, ?, 'CNY', 'DEFAULT', 'ACTIVE', ?);
+-- INSERT INTO account_balance (account_id, opening_balance, available_balance, frozen_balance, version, updated_at)
+-- VALUES (?, 1000000, 1000000, 0, 0, ?);

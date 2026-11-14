@@ -1,0 +1,10 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: fcp-kafka-failure, namespace: fcp }
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [kafka]
+    labelSelectors: { app: kafka }
+  duration: 120s

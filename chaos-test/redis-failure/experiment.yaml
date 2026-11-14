@@ -1,0 +1,10 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: fcp-redis-failure, namespace: fcp }
+spec:
+  action: pod-kill
+  mode: all
+  selector:
+    namespaces: [fcp]
+    labelSelectors: { app: redis }
+  duration: 120s

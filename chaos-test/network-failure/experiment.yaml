@@ -1,0 +1,11 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata: { name: fcp-network-partition, namespace: fcp }
+spec:
+  action: partition
+  mode: one
+  selector:
+    namespaces: [fcp]
+    labelSelectors: { app: fcp-app }
+  direction: both
+  duration: 120s

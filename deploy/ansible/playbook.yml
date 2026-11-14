@@ -1,0 +1,50 @@
+---
+# 阶段四：发布编排（灰度 + 回滚 + 审计记录）
+# 用法：ansible-playbook -i inventory deploy/ansible/playbook.yml -e app_version=1.0.0
+- name: Deploy financial-core-platform
+  hosts: fcp_app
+  become: true
+  serial: "30%"          # 分批灰度，先 30% 实例
+  max_fail_percentage: 0
+  vars:
+    app_image: "fcp/app:{{ app_version }}"
+    health_url: "http://127.0.0.1:8080/v1/invariants"
+
+  tasks:
+    - name: Pull new image
+      ansible.builtin.command: "docker pull {{ app_image }}"
+
+    - name: Rolling replace container
+      ansible.builtin.command:
+        cmd: "docker run -d --name fcp-app --env-file /etc/fcp/env -p 8080:8080 {{ app_image }}"
+      notify: remove old container
+
+    - name: Wait for readiness
+      ansible.builtin.uri:
+        url: "{{ health_url }}"
+        status_code: 200
+      register: health
+      until: health.status == 200
+      retries: 30
+      delay: 2
+
+    - name: Verify invariants are healthy
+      ansible.builtin.uri:
+        url: "{{ health_url }}"
+        return_content: true
+      register: inv
+      failed_when: "'\"healthy\":false' in inv.content"
+
+    - name: Record deployment audit
+      ansible.builtin.lineinfile:
+        path: /var/log/fcp/deploy-audit.log
+        line: "{{ ansible_date_time.iso8601 }} version={{ app_version }} host={{ inventory_hostname }} result=OK"
+        create: true
+
+  handlers:
+    - name: remove old container
+      ansible.builtin.command: "docker rm -f fcp-app-old"
+      ignore_errors: true
+
+# 回滚：ansible-playbook ... -e app_version=<上一个稳定版本>
+# 灰度失败即停止（max_fail_percentage: 0），审计日志保留每次发布记录（README 6.2 错误配置/版本发布）。

@@ -1,0 +1,9 @@
+# 数据库主节点故障：由托管服务执行主从切换，此处记录演练参数
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: fcp-chaos-db-failover, namespace: fcp }
+data:
+  action: "primary-failover"
+  durationSeconds: "120"
+  expectedRtoSeconds: "300"      # 阶段一/二 < 30min；阶段四 < 5min
+  expectedRpoSeconds: "300"

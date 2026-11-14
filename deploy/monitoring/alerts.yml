@@ -1,0 +1,37 @@
+groups:
+  - name: fcp-slo
+    rules:
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) > 0.2
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "核心交易 P99 超过 200ms（阶段一 SLO）"
+
+      - alert: InvariantViolation
+        expr: fcp_invariant_violations > 0
+        for: 0m
+        labels: { severity: critical }
+        annotations:
+          summary: "资金不变量被破坏，立即停止发布并核对账务"
+
+      - alert: DuplicateDebitRisk
+        expr: rate(fcp_idempotency_conflict_total[5m]) > 0
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "幂等键冲突增多，排查重复请求"
+
+      - alert: OutboxBacklog
+        expr: fcp_outbox_unpublished > 10000
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "Outbox 积压，事件投递延迟"
+
+      - alert: DatabaseUnavailable
+        expr: up{job="fcp-db"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "账务库不可用，触发 RTO/RPO 恢复流程"

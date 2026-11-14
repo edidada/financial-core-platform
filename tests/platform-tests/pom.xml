@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.fcp</groupId>
+        <artifactId>financial-core-platform</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <artifactId>platform-tests</artifactId>
+    <name>fcp :: tests :: platform</name>
+    <dependencies>
+        <dependency><groupId>com.fcp</groupId><artifactId>common-domain</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>common-exception</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>common-utils</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-rule</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-batch</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-reconciliation</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-routing</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-hotspot</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-rate-limiter</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-circuit-breaker</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-database-sharding</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-id-generator</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-observability</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>gateway-authentication</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-fee</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-limit</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-risk</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-clearing</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-reconciliation</artifactId></dependency>
+        <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    </dependencies>
+</project>

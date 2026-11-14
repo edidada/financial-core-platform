@@ -1,0 +1,31 @@
+syntax = "proto3";
+package com.fcp.contracts;
+option java_package = "com.fcp.contracts.proto";
+option java_outer_classname = "TransactionProto";
+
+// 内部 gRPC 契约（阶段二服务间通信）；外部接口走 REST/OpenAPI。
+message Money {
+  int64 amount_minor = 1;   // 最小货币单位，禁止浮点
+  string currency = 2;      // ISO-4217
+}
+
+message TransferCommand {
+  string transaction_id = 1;
+  string idempotency_key = 2;
+  int64 payer_account_id = 3;
+  int64 payee_account_id = 4;
+  Money amount = 5;
+  string trace_id = 6;
+}
+
+message TransactionEvent {
+  string event_id = 1;
+  string transaction_id = 2;
+  string status = 3;        // CREATED/VALIDATED/PROCESSING/SUCCEEDED/FAILED/UNKNOWN/RECOVERING/REVERSED
+  int64 occurred_at_millis = 4;
+}
+
+service TransactionService {
+  rpc Submit (TransferCommand) returns (TransactionEvent);
+  rpc Query  (TransactionEvent) returns (TransactionEvent);
+}

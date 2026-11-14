@@ -1,0 +1,11 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: fcp-app, namespace: fcp }
+spec:
+  podSelector: { matchLabels: { app: fcp-app } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{ namespaceSelector: { matchLabels: { name: ingress } } }]
+      ports: [{ port: 8080 }]
+  egress:
+    - to: [{ ipBlock: { cidr: 10.0.0.0/8 } }]   # 仅允许访问同 VPC 数据库/Kafka

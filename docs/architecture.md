@@ -119,6 +119,9 @@ infrastructure (JPA/MyBatis / Outbox / 审计 / 时钟 / ID 生成)
 | [ADR-0004](adr/0004-reversal-by-reverse-entry.md) | 冲正通过反向分录实现 |
 | [ADR-0005](adr/0005-idempotency-key.md) | 幂等键 + 唯一约束 + 结果快照 |
 | [ADR-0006](adr/0006-multi-database-support.md) | MySQL 8 默认 + PostgreSQL 保留的多数据库支持 |
+| [ADR-0007](adr/0007-outbox-at-least-once.md) | Outbox 至少一次投递 + 消费侧幂等 |
+| [ADR-0008](adr/0008-sharding-rollout.md) | 分片分阶段引入，单库基线优先 |
+| [ADR-0009](adr/0009-hotspot-netting.md) | 热点账户缓冲净额折叠（阶段五专题） |
 
 ## 十、阶段二演进钩子
 

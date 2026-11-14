@@ -1,0 +1,76 @@
+name: test
+
+on:
+  push: { branches: [main] }
+  pull_request: { branches: [main] }
+
+jobs:
+  unit-and-platform-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+      - name: Unit + platform tests
+        run: mvn -B -ntp test
+      - name: Publish surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports/*.xml'
+
+  # 双库集成测试（ADR-0006 / TC-9）：同一套用例分别跑 MySQL 8 与 PostgreSQL
+  dual-database-integration:
+    runs-on: ubuntu-latest
+    needs: unit-and-platform-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [mysql, postgresql]
+    services:
+      mysql:
+        image: mysql:8.4
+        env: { MYSQL_DATABASE: fcp, MYSQL_ROOT_PASSWORD: testpass }
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptestpass"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_DB: fcp, POSTGRES_USER: fcp, POSTGRES_PASSWORD: testpass }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U fcp -d fcp"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+      - name: Build
+        run: mvn -B -ntp -DskipTests package
+      - name: Start app with ${{ matrix.db }}
+        env:
+          FCP_DB_PROFILE: ${{ matrix.db }}
+          FCP_DB_USER: ${{ matrix.db == 'mysql' && 'root' || 'fcp' }}
+          FCP_DB_PASSWORD: testpass
+          FCP_SERVER_PORT: '18080'
+        run: |
+          java -jar app/financial-core-app/target/financial-core-app-*.jar > app.log 2>&1 &
+          echo $! > app.pid
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:18080/v1/invariants && break
+            sleep 1
+          done
+      - name: Verify Flyway + invariants
+        run: |
+          curl -sf http://localhost:18080/v1/invariants | tee inv.json
+          grep -q '"healthy":true' inv.json
+          curl -sf -X POST 'http://localhost:18080/v1/platform/hotspot/proof?n=5000'
+      - name: Stop app
+        if: always()
+        run: kill $(cat app.pid) || true
+      - name: Upload app log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: app-${{ matrix.db }}.log, path: app.log }

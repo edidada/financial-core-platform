@@ -15,6 +15,32 @@
         <dependency><groupId>com.fcp</groupId><artifactId>service-transaction</artifactId></dependency>
         <dependency><groupId>com.fcp</groupId><artifactId>service-account</artifactId></dependency>
         <dependency><groupId>com.fcp</groupId><artifactId>service-ledger</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-payment</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-clearing</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-settlement</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-reconciliation</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-refund</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-fee</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-limit</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-risk</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-liquidity</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>service-reporting</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-id-generator</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-distributed-lock</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-transaction-outbox</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-message-consumer</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-rate-limiter</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-circuit-breaker</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-database-sharding</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-audit-log</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>infra-observability</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>gateway-authentication</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>gateway-api-gateway</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-rule</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-batch</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-reconciliation</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-routing</artifactId></dependency>
+        <dependency><groupId>com.fcp</groupId><artifactId>engine-hotspot</artifactId></dependency>
         <dependency><groupId>com.fcp</groupId><artifactId>common-api</artifactId></dependency>
         <dependency><groupId>com.fcp</groupId><artifactId>common-domain</artifactId></dependency>
         <dependency><groupId>com.fcp</groupId><artifactId>common-exception</artifactId></dependency>

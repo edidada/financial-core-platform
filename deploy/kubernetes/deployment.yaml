@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: fcp-app, namespace: fcp }
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: fcp-app } }
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
+  template:
+    metadata:
+      labels: { app: fcp-app }
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: app
+          image: fcp/app:1.0.0
+          ports: [{ containerPort: 8080 }]
+          envFrom:
+            - configMapRef: { name: fcp-config }
+            - secretRef: { name: fcp-secrets }
+          env:
+            - name: FCP_WORKER_ID
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+          resources:
+            requests: { cpu: "500m", memory: "1Gi" }
+            limits:   { cpu: "2",    memory: "2Gi" }
+          readinessProbe:
+            httpGet: { path: /v1/invariants, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /v1/invariants, port: 8080 }
+            initialDelaySeconds: 45
+            periodSeconds: 20
+          lifecycle:
+            preStop: { exec: { command: ["sh", "-c", "sleep 10"] } }

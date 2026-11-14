@@ -1,0 +1,11 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata: { name: fcp-pod-kill, namespace: fcp }
+spec:
+  action: pod-kill
+  mode: fixed-percent
+  value: "50"
+  selector:
+    namespaces: [fcp]
+    labelSelectors: { app: fcp-app }
+  duration: 120s

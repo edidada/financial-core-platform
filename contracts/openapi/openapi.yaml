@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: Financial Core Platform API
+  version: 1.0.0
+  description: >
+    工业级金融交易与账务平台。金额一律为最小货币单位（分，BIGINT），禁止浮点。
+    所有写操作必须携带 Idempotency-Key。
+servers:
+  - url: http://localhost:8080
+    description: 本机（默认 8080；被占用时用 FCP_SERVER_PORT 覆盖）
+security:
+  - ApiKeyAuth: []
+  - RequestSignature: []
+paths:
+  /v1/accounts:
+    post:
+      operationId: createAccount
+      summary: 开户（可指定期初余额）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAccountRequest' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ApiResultAccount' } } } }
+  /v1/accounts/{id}:
+    get:
+      operationId: getAccount
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses:
+        '200': { description: OK }
+  /v1/transactions:
+    post:
+      operationId: transfer
+      summary: 转账（幂等）
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TransferRequest' }
+      responses:
+        '200': { description: 交易已提交 }
+        '400': { description: 余额不足 / 参数非法 }
+        '409': { description: 幂等键冲突 }
+  /v1/transactions/{id}:
+    get:
+      operationId: getTransaction
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+      responses: { '200': { description: OK } }
+  /v1/transactions/byKey/{key}:
+    get:
+      operationId: getTransactionByKey
+      summary: 超时后按幂等键查询最终状态（UNKNOWN 不等于失败）
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string } }
+        - { name: tenantId, in: query, required: true, schema: { type: integer, format: int64 } }
+      responses: { '200': { description: OK } }
+  /v1/transactions/{id}:reverse:
+    post:
+      operationId: reverseTransaction
+      summary: 冲正（反向分录，原凭证保留）
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer, format: int64 } }
+        - { name: tenantId, in: query, required: true, schema: { type: integer, format: int64 } }
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+      responses: { '200': { description: OK } }
+  /v1/invariants:
+    get:
+      operationId: invariants
+      summary: 资金不变量 I-1~I-4 离线校验
+      responses: { '200': { description: OK } }
+  /v1/platform/outbox/relay:
+    post:
+      operationId: relayOutbox
+      summary: 阶段二 Outbox 投递
+      responses: { '200': { description: OK } }
+  /v1/platform/reconciliation:
+    post:
+      operationId: reconcile
+      summary: 阶段二 多方对账
+      responses: { '200': { description: OK } }
+components:
+  securitySchemes:
+    ApiKeyAuth: { type: apiKey, in: header, name: X-Api-Key }
+    RequestSignature: { type: apiKey, in: header, name: X-Signature }
+  schemas:
+    ApiResultAccount:
+      type: object
+      properties:
+        code: { type: integer }
+        message: { type: string }
+    CreateAccountRequest:
+      type: object
+      required: [tenantId, accountNo, currency]
+      properties:
+        tenantId: { type: integer, format: int64 }
+        accountNo: { type: string }
+        currency: { type: string, example: CNY }
+        initialBalanceMinor: { type: integer, format: int64, description: 期初余额（分） }
+    TransferRequest:
+      type: object
+      required: [tenantId, payerAccountId, payeeAccountId, amountMinor, currency]
+      properties:
+        tenantId: { type: integer, format: int64 }
+        payerAccountId: { type: integer, format: int64 }
+        payeeAccountId: { type: integer, format: int64 }
+        amountMinor: { type: integer, format: int64, description: 金额（分），必须 > 0 }
+        currency: { type: string, example: CNY }

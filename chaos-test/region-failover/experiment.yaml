@@ -1,0 +1,10 @@
+# 整个可用区不可用：多 AZ 演练参数
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: fcp-chaos-az-failover, namespace: fcp }
+data:
+  action: "az-unavailable"
+  targetAz: "az-1"
+  durationSeconds: "600"
+  expectedRtoSeconds: "60"       # 阶段三 < 60s；阶段四 < 5min
+  expectedRpoSeconds: "30"

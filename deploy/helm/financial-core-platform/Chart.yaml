@@ -1,0 +1,6 @@
+apiVersion: v2
+name: financial-core-platform
+description: Industrial-grade financial transaction and double-entry ledger platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

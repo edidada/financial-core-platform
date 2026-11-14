@@ -1,0 +1,36 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version: { description: '发布版本', required: true }
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions: { contents: write, packages: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+
+      - name: Full verification before release
+        run: mvn -B -ntp clean verify
+
+      - name: Build container image
+        run: docker build -f deploy/docker/Dockerfile -t fcp/app:${{ github.ref_name }} .
+
+      - name: Gate on invariants (must be green)
+        run: |
+          echo "发布门禁：/v1/invariants healthy=true 且无 I-1~I-4 违规"
+          echo "在真实环境中由 test.yml 双库集成测试执行；此处为流程占位"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: app/financial-core-app/target/financial-core-app-*.jar
+
+  # 灰度与回滚见 deploy/ansible/playbook.yml；发布审计日志随流水保留

@@ -24,18 +24,53 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
+    <!-- 依赖方向自上而下单向（architecture.md 第四节）：common -> infrastructure -> engines -> services -> app -->
     <modules>
         <module>common/common-domain</module>
         <module>common/common-exception</module>
         <module>common/common-utils</module>
         <module>common/common-api</module>
+
         <module>infrastructure/idempotency</module>
         <module>infrastructure/outbox</module>
+        <module>infrastructure/id-generator</module>
+        <module>infrastructure/distributed-lock</module>
+        <module>infrastructure/transaction-outbox</module>
+        <module>infrastructure/message-consumer</module>
+        <module>infrastructure/rate-limiter</module>
+        <module>infrastructure/circuit-breaker</module>
+        <module>infrastructure/database-sharding</module>
+        <module>infrastructure/audit-log</module>
+        <module>infrastructure/observability</module>
+
+        <module>gateway/authentication</module>
+        <module>gateway/api-gateway</module>
+
         <module>engines/accounting-engine</module>
         <module>engines/posting-engine</module>
+        <module>engines/rule-engine</module>
+        <module>engines/batch-engine</module>
+        <module>engines/reconciliation-engine</module>
+        <module>engines/routing-engine</module>
+        <module>engines/hotspot-accounting-engine</module>
+
         <module>services/account-service</module>
         <module>services/ledger-service</module>
         <module>services/transaction-service</module>
+        <module>services/payment-service</module>
+        <module>services/clearing-service</module>
+        <module>services/settlement-service</module>
+        <module>services/reconciliation-service</module>
+        <module>services/refund-service</module>
+        <module>services/fee-service</module>
+        <module>services/limit-service</module>
+        <module>services/risk-engine</module>
+        <module>services/liquidity-service</module>
+        <module>services/reporting-service</module>
+
+        <module>benchmark/jmh</module>
+        <module>tests/platform-tests</module>
+
         <module>app/financial-core-app</module>
     </modules>
 
@@ -52,6 +87,33 @@
             <dependency><groupId>com.fcp</groupId><artifactId>service-account</artifactId><version>${project.version}</version></dependency>
             <dependency><groupId>com.fcp</groupId><artifactId>service-ledger</artifactId><version>${project.version}</version></dependency>
             <dependency><groupId>com.fcp</groupId><artifactId>service-transaction</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-id-generator</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-distributed-lock</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-transaction-outbox</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-message-consumer</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-rate-limiter</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-circuit-breaker</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-database-sharding</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-audit-log</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>infra-observability</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>gateway-authentication</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>gateway-api-gateway</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-rule</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-batch</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-reconciliation</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-routing</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>engine-hotspot</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-payment</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-clearing</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-settlement</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-reconciliation</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-refund</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-fee</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-limit</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-risk</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-liquidity</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>service-reporting</artifactId><version>${project.version}</version></dependency>
+            <dependency><groupId>com.fcp</groupId><artifactId>benchmark-jmh</artifactId><version>${project.version}</version></dependency>
             <dependency><groupId>com.fcp</groupId><artifactId>financial-core-app</artifactId><version>${project.version}</version></dependency>
         </dependencies>
     </dependencyManagement>

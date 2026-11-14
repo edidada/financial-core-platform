@@ -1,0 +1,19 @@
+{
+  "title": "Financial Core Platform",
+  "uid": "fcp-overview",
+  "schemaVersion": 39,
+  "panels": [
+    { "id": 1, "type": "timeseries", "title": "交易 TPS", "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [{ "expr": "sum(rate(fcp_transactions_total[1m]))" }] },
+    { "id": 2, "type": "timeseries", "title": "P99 延迟 (ms)", "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [{ "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) * 1000" }] },
+    { "id": 3, "type": "stat", "title": "资金不变量违规数", "gridPos": { "h": 6, "w": 8, "x": 0, "y": 8 },
+      "targets": [{ "expr": "fcp_invariant_violations" }],
+      "fieldConfig": { "defaults": { "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } } } },
+    { "id": 4, "type": "stat", "title": "Outbox 未投递", "gridPos": { "h": 6, "w": 8, "x": 8, "y": 8 },
+      "targets": [{ "expr": "fcp_outbox_unpublished" }] },
+    { "id": 5, "type": "stat", "title": "死信队列", "gridPos": { "h": 6, "w": 8, "x": 16, "y": 8 },
+      "targets": [{ "expr": "fcp_dead_letter_total" }] }
+  ],
+  "time": { "from": "now-6h", "to": "now" }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PaymentInstruction",
+  "type": "object",
+  "required": ["paymentId", "transactionId", "amountMinor", "currency", "status"],
+  "properties": {
+    "paymentId": { "type": "string" },
+    "transactionId": { "type": "string" },
+    "amountMinor": { "type": "integer", "minimum": 1 },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "channel": { "type": "string" },
+    "externalRef": { "type": "string" },
+    "status": { "enum": ["CREATED", "SUBMITTED", "ACCEPTED", "REJECTED", "UNKNOWN", "SETTLED", "FAILED"] }
+  }
+}

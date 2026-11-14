@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TransactionSucceeded",
+  "description": "交易已入账事件；消费侧必须按 eventId 去重（至少一次投递）",
+  "type": "object",
+  "required": ["eventId", "transactionId", "eventType", "amountMinor", "currency", "occurredAtMillis"],
+  "properties": {
+    "eventId": { "type": "string" },
+    "transactionId": { "type": "string" },
+    "eventType": { "const": "TRANSACTION_SUCCEEDED" },
+    "amountMinor": { "type": "integer", "minimum": 1 },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "traceId": { "type": "string" },
+    "occurredAtMillis": { "type": "integer" }
+  },
+  "additionalProperties": false
+}
